@@ -205,22 +205,52 @@ def extract_frames(video_path, frames_dir, num_frames=30):
     cap.release()
     return frame_files, duration
 
-def extract_audio(video_path, audio_path):
-    """Extract audio from video using ffmpeg."""
-    command = [
-        "ffmpeg", "-y", "-i", video_path, "-vn", "-acodec", "pcm_s16le",
-        "-ar", "16000", "-ac", "1", audio_path
-    ]
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+# def extract_audio(video_path, audio_path):
+#     """Extract audio from video using ffmpeg."""
+#     command = [
+#         "ffmpeg", "-y", "-i", video_path, "-vn", "-acodec", "pcm_s16le",
+#         "-ar", "16000", "-ac", "1", audio_path
+#     ]
+#     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-def transcribe_audio(audio_path):
-    """Transcribe audio using OpenAI Whisper."""
-    with open(audio_path, "rb") as audio_file:
-        transcript = openai.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file
-        )
-    return transcript.text
+# def transcribe_audio(audio_path):
+#     """Transcribe audio using OpenAI Whisper."""
+#     with open(audio_path, "rb") as audio_file:
+#         transcript = openai.audio.transcriptions.create(
+#             model="whisper-1",
+#             file=audio_file
+#         )
+#     return transcript.text
+def extract_audio(video_path, audio_path):
+    os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+
+    command = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-vn",
+        "-acodec", "pcm_s16le",
+        "-ar", "16000",
+        "-ac", "1",
+        audio_path
+    ]
+
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    if result.returncode != 0:
+        stderr = result.stderr.decode(errors="ignore").lower()
+
+        if "audio" in stderr or "stream" in stderr:
+            print("[INFO] No audio stream detected. Continuing without transcript.")
+            return False
+
+        raise RuntimeError(f"FFmpeg failed:\n{stderr}")
+
+    return True
+
 
 def describe_frames(frames_dir, frame_files):
     """Describe each frame using OpenAI Vision model."""
