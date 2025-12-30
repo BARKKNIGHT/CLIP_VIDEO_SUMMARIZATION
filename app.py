@@ -584,4 +584,4 @@ def root_redirect():
 # Place index.html, progress.html, results.html in /templates
 
 if __name__ == "__main__":
-    app.run(debug=True,port=8000)
+    app.run(debug=True,port=8000, host="0.0.0.0")
