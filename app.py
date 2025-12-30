@@ -253,7 +253,7 @@ def describe_frames(frames_dir, frame_files):
         with open(frame_path, "rb") as img_file:
             frame_b64 = base64.b64encode(img_file.read()).decode("utf-8")
         response = openai.chat.completions.create(
-            model="gpt-4o",  # Updated to correct model name
+            model="gpt-4.1",
             messages=[
                 {
                     "role": "user",
@@ -283,7 +283,7 @@ def summarize(descriptions, transcript):
         + "\n\nSummarize the video content, combining visual and audio information."
     )
     response = openai.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500,
     )
