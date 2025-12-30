@@ -343,7 +343,7 @@ def process_video(video_id, video_path, frames_dir):
         else:
             transcript = ""
         set_status(video_id, {"status": "Describing frames...", "progress": 70})
-        descriptions = describe_frames(frames_dir, frame_files)
+        descriptions = describe_frames(frames_dir, frame_file)
         set_status(video_id, {"status": "Summarizing...", "progress": 90})
         summary = summarize(descriptions, transcript)
         set_status(video_id, {
