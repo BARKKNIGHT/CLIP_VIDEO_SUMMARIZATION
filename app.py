@@ -213,14 +213,15 @@ def extract_frames(video_path, frames_dir, num_frames=30):
 #     ]
 #     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-# def transcribe_audio(audio_path):
-#     """Transcribe audio using OpenAI Whisper."""
-#     with open(audio_path, "rb") as audio_file:
-#         transcript = openai.audio.transcriptions.create(
-#             model="whisper-1",
-#             file=audio_file
-#         )
-#     return transcript.text
+def transcribe_audio(audio_path):
+    """Transcribe audio using OpenAI Whisper."""
+    with open(audio_path, "rb") as audio_file:
+        transcript = openai.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file
+        )
+    return transcript.text
+
 def extract_audio(video_path, audio_path):
     os.makedirs(os.path.dirname(audio_path), exist_ok=True)
 
@@ -324,13 +325,23 @@ def generate_docx(transcript, summary, output_path):
 
 def process_video(video_id, video_path, frames_dir):
     try:
-        set_status(video_id, {"status": "Extracting frames...", "progress": 10})
-        frame_files, duration = extract_frames(video_path, frames_dir)
+        # set_status(video_id, {"status": "Extracting frames...", "progress": 10})
+        # frame_files, duration = extract_frames(video_path, frames_dir)
+        # set_status(video_id, {"status": "Extracting audio...", "progress": 30})
+        # audio_path = os.path.join(frames_dir, f"{video_id}.wav")
+        # extract_audio(video_path, audio_path)
+        # set_status(video_id, {"status": "Transcribing audio...", "progress": 50})
+        # transcript = transcribe_audio(audio_path)
         set_status(video_id, {"status": "Extracting audio...", "progress": 30})
         audio_path = os.path.join(frames_dir, f"{video_id}.wav")
-        extract_audio(video_path, audio_path)
-        set_status(video_id, {"status": "Transcribing audio...", "progress": 50})
-        transcript = transcribe_audio(audio_path)
+        
+        has_audio = extract_audio(video_path, audio_path)
+        
+        if has_audio:
+            set_status(video_id, {"status": "Transcribing audio...", "progress": 50})
+            transcript = transcribe_audio(audio_path)
+        else:
+            transcript = ""
         set_status(video_id, {"status": "Describing frames...", "progress": 70})
         descriptions = describe_frames(frames_dir, frame_files)
         set_status(video_id, {"status": "Summarizing...", "progress": 90})
