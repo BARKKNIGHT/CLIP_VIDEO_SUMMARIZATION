@@ -205,14 +205,6 @@ def extract_frames(video_path, frames_dir, num_frames=30):
     cap.release()
     return frame_files, duration
 
-# def extract_audio(video_path, audio_path):
-#     """Extract audio from video using ffmpeg."""
-#     command = [
-#         "ffmpeg", "-y", "-i", video_path, "-vn", "-acodec", "pcm_s16le",
-#         "-ar", "16000", "-ac", "1", audio_path
-#     ]
-#     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-
 def transcribe_audio(audio_path):
     """Transcribe audio using OpenAI Whisper."""
     with open(audio_path, "rb") as audio_file:
@@ -261,7 +253,7 @@ def describe_frames(frames_dir, frame_files):
         with open(frame_path, "rb") as img_file:
             frame_b64 = base64.b64encode(img_file.read()).decode("utf-8")
         response = openai.chat.completions.create(
-            model="gpt-4.1",  # Correct vision model name
+            model="gpt-4o",  # Updated to correct model name
             messages=[
                 {
                     "role": "user",
@@ -291,7 +283,7 @@ def summarize(descriptions, transcript):
         + "\n\nSummarize the video content, combining visual and audio information."
     )
     response = openai.chat.completions.create(
-        model="gpt-4.1",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=500,
     )
@@ -325,13 +317,9 @@ def generate_docx(transcript, summary, output_path):
 
 def process_video(video_id, video_path, frames_dir):
     try:
-        # set_status(video_id, {"status": "Extracting frames...", "progress": 10})
-        # frame_files, duration = extract_frames(video_path, frames_dir)
-        # set_status(video_id, {"status": "Extracting audio...", "progress": 30})
-        # audio_path = os.path.join(frames_dir, f"{video_id}.wav")
-        # extract_audio(video_path, audio_path)
-        # set_status(video_id, {"status": "Transcribing audio...", "progress": 50})
-        # transcript = transcribe_audio(audio_path)
+        set_status(video_id, {"status": "Extracting frames...", "progress": 10})
+        frame_files, duration = extract_frames(video_path, frames_dir)
+        
         set_status(video_id, {"status": "Extracting audio...", "progress": 30})
         audio_path = os.path.join(frames_dir, f"{video_id}.wav")
         
@@ -342,10 +330,13 @@ def process_video(video_id, video_path, frames_dir):
             transcript = transcribe_audio(audio_path)
         else:
             transcript = ""
+        
         set_status(video_id, {"status": "Describing frames...", "progress": 70})
-        descriptions = describe_frames(frames_dir, frame_file)
+        descriptions = describe_frames(frames_dir, frame_files)
+        
         set_status(video_id, {"status": "Summarizing...", "progress": 90})
         summary = summarize(descriptions, transcript)
+        
         set_status(video_id, {
             "status": "Completed",
             "progress": 100,
@@ -576,12 +567,8 @@ def rename_video(video_id):
     flash("Video renamed successfully.", "success")
     return redirect(url_for("results", video_id=video_id))
 
-@app.route("/")
-def root_redirect():
-    return redirect(url_for("login"))
-
 # --- Templates ---
 # Place index.html, progress.html, results.html in /templates
 
 if __name__ == "__main__":
-    app.run(debug=True,port=8000, host="0.0.0.0")
+    app.run(debug=True, port=8000, host="0.0.0.0")
